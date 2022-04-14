@@ -8,12 +8,27 @@ import java.nio.file.Paths;
 
 public class Main {
 
+    static final String CLASS_METHOD_SPLITER="#";
+
     public static void main(String[] args) throws Exception {
         Path path = Paths.get(args[0]);
-        String filter = null;
+        String classFilter = "";
+        String methodFilter="";
+
         if (args.length > 1) {
-            filter = args[1];
-            System.out.println("filter: " + filter);
+            String[] ss = args[1].split(CLASS_METHOD_SPLITER);
+            classFilter= ss[0];
+            methodFilter= ss[1];
+            System.out.println("class filter: " + classFilter);
+            System.out.println("method filter: "+ methodFilter);
+            if (ss.length>2) {
+                System.out.println("Error: split filter error "+args[1]);
+                System.exit(0);
+            }
+            if (classFilter.isEmpty()) {
+                System.out.println("Error: class filter empty");
+            }
+
         } else {
             System.out.println("Info: no filter");
             System.exit(0);
@@ -37,9 +52,13 @@ public class Main {
                 for (RecordedFrame frame : st.getFrames()) {
                     RecordedMethod method = frame.getMethod();
                     RecordedClass claz = method.getType();
-                    if (filter != null && claz.getName().contains(filter)) {
-                        count++;
-                        System.out.println("frame: " + frame);
+                    if (claz.getName().contains(classFilter)) {
+                        if (!methodFilter.isEmpty() && method.getName().contains(methodFilter)) {
+                            count++;
+                        }else {
+                            count++;
+                        }
+                        //System.out.println("frame: " + frame);
                         // System.out.print("method: "+method.getName());
                         // System.out.println("line number: "+frame.getLineNumber());
                     }
