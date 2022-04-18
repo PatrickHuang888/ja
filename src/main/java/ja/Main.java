@@ -52,16 +52,16 @@ public class Main {
                 for (RecordedFrame frame : st.getFrames()) {
                     RecordedMethod method = frame.getMethod();
                     RecordedClass claz = method.getType();
-                    if (claz.getName().contains(classFilter)) {
+                    //if (claz.getName().contains(classFilter)) {
                         if (!methodFilter.isEmpty() && method.getName().contains(methodFilter)) {
                             count++;
-                        }else {
+                        }/*else {
                             count++;
-                        }
+                        }*/
                         //System.out.println("frame: " + frame);
                         // System.out.print("method: "+method.getName());
                         // System.out.println("line number: "+frame.getLineNumber());
-                    }
+                    //}
                 }
             }
         }
