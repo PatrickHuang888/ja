@@ -20,6 +20,9 @@ public class Find implements Callable {
     @CommandLine.Parameters(paramLabel = "jfr file", description = "captured jfr file to analyze")
     private String jfrFileName;
 
+    @CommandLine.Option(names ={"-d", "--downStack"}, description = "analyze down the stack")
+    private boolean downStack=false;
+
     @CommandLine.Option(names = {"-c", "--class"}, required = true, description = "class filter")
     private String classFilter;
 
@@ -32,6 +35,9 @@ public class Find implements Callable {
         if (methodFilter != null) {
             System.out.println("method filter: " + methodFilter);
         }
+        if (downStack) {
+            System.out.println("down stack");
+        }
 
         Path path = Paths.get(jfrFileName);
         RecordingFile rf = new RecordingFile(path);
@@ -43,19 +49,32 @@ public class Find implements Callable {
             if (et.getName().equals("jdk.ExecutionSample")) {
                 RecordedStackTrace st = event.getStackTrace();
 
-                for (RecordedFrame frame : st.getFrames()) {
-                    RecordedMethod method = frame.getMethod();
+                RecordedFrame[] frames= st.getFrames().toArray(new RecordedFrame[0]);
+                int i=0;
+                while (i<frames.length) {
+                    RecordedMethod method = frames[i].getMethod();
                     RecordedClass claz = method.getType();
 
                     if (found) {
-                        // up the stack
-                        inputStack(claz.getName(), method.getName(), frame.getLineNumber());
+                            // up the stack
+                            inputStack(claz.getName(), method.getName(), frames[i].getLineNumber());
                     } else {
                         if (claz.getName().contains(classFilter) && method.getName().contains(methodFilter)) {
-                                found = true;
-                                // no line, maybe in different line of the method
-                                inputStack(claz.getName(), method.getName(), 0);
+                            found = true;
+                            // no line, maybe in different line of the method
+                            inputStack(claz.getName(), method.getName(), 0);
+                            if (downStack) {
+                                break;
+                            }
                         }
+                    }
+                    i++;
+                }
+                if (found && downStack) {
+                    for (int j=i-1; j>=0; j--) {
+                        RecordedMethod method = frames[j].getMethod();
+                        RecordedClass claz = method.getType();
+                        inputStack(claz.getName(), method.getName(), frames[j].getLineNumber());
                     }
                 }
 
